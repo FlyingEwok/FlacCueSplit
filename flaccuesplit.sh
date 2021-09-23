@@ -1,18 +1,39 @@
 #!/usr/bin/env bash
 
-echo "Starting flaccuesplit"
+# Colour Support
+# Escape sequeces to change the text colour
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+LBLUE='\033[1;34m'
+NC='\033[0m' # No Color
 
-path="$1"
-cd "$path"
+printC() {
+    message=$1
+    colour=$2
+    echo -e "${colour}${message}${NC}"
+}
+
+printInfo() {
+    printC "$1" $LBLUE
+}
+
+printSuccess() {
+    printC "$1" $GREEN
+}
+
+printError() {
+    printC "$1" $RED >&2
+}
 
 flaccuesplit ()
 {
     cueFile="$1"
     flacFile="$2"
-    echo "Now Splitting Files"
+    printInfo "Now Splitting Files"
     shnsplit -f "$cueFile" -t %n-%t -o flac "$flacFile"
     if [ $? -ne 0 ]; then
-        echo "Splitting Failed!"
+        printError "Splitting Failed!"
         exit 1
     fi
 }
@@ -21,14 +42,19 @@ splitflacTag ()
 {
     cueFile="$1"
     cuetag "$cueFile" [0-9]*.flac
-    echo "Files Tagged"
+    printSuccess "Files Tagged"
 }
+
+printInfo "Starting flaccuesplit"
+
+path="$1"
+cd "$path"
 
 cueFile=(*.cue)
 flacFile=(*.flac)
 
-if [ ${#cueFile[@]} -gt 1 ]; then 
-    echo -e "Multiple files found\nSelect one."
+if [ ${#cueFile[@]} -gt 1 ]; then
+    printInfo "Multiple CUE files found\nSelect one."
     for INDEX in ${!cueFile[@]}; do 
         echo "${INDEX}) ${cueFile[${INDEX}]}"
     done
@@ -38,7 +64,6 @@ if [ ${#cueFile[@]} -gt 1 ]; then
 else
     cueFile="${cueFile[0]}"
 fi
-
 
 flaccuesplit "$cueFile" "${flacFile[0]}"
 
